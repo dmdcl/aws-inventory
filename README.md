@@ -17,8 +17,8 @@ Python tool to inventory AWS resources (EC2 for now) and generate an HTML report
 * AWS credentials configures via AWS ClI profiles
 * Python packages:
 ```shell
-boto3> =1.30.0
-jinja2> =3.1.2
+boto3 >=1.30.0
+jinja2 >=3.1.2
 ```
 Install dependencies:
 ```bash
@@ -47,7 +47,7 @@ aws_inventory/
 aws configure --profile profile_name
 ```
 ### 2. Run the tool
-from the project root:  
+From the project root run:
 **Single region:**
 ```bash
 python -m aws_inventory.main --profile profile_name --regions us-east-1
