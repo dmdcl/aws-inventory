@@ -20,12 +20,30 @@ Python tool to inventory AWS resources (EC2 for now) and generate an HTML report
 boto3 >=1.30.0
 jinja2 >=3.1.2
 ```
-Install dependencies:
+## Installation 
+### 1. Create a virtual environment (recommended)
 ```bash
-pip install -r requirements.txt
+python -m venv name_venv
+source name_venv/bin/activate # Linux/Mac
+name_venv/Scripts/activate # Windows
 ```
+### 2. Install the tool
+#### Option A: Editable install (recommended for development)
 ```bash
+git clone <repo-url>
+cd aws-inventory
+pip install -e.
+```
+> This installs the package in editable mode, so any changes to the source code are imediatly available.
+#### Option B: Regular pip install
+```bash
+git clone <repo-url>
+cd aws-inventory
+pip install . 
+```
+> Dependencies (`boto3`, `jinja2`) are automatically installed from `setup.py`
 ## Project Structure
+```bash
 aws_inventory/
 ├── aws_inventory/          
 │   ├── __init__.py
