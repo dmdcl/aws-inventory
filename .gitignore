@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+dist/
+build/
+*.wheel
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+awsinvenv/
+
+# PyCharm / VS Code settings
+.idea/
+.vscode/
+
+# Reports / generated files
+reports/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Python coverage
+.coverage
+htmlcov/
+*.cover
+*.py,cover
+
+# Logs
+*.log
+
