@@ -1,0 +1,14 @@
+README.md
+setup.py
+aws_inventory/__init__.py
+aws_inventory/main.py
+aws_inventory.egg-info/PKG-INFO
+aws_inventory.egg-info/SOURCES.txt
+aws_inventory.egg-info/dependency_links.txt
+aws_inventory.egg-info/top_level.txt
+aws_inventory/regional/__init__.py
+aws_inventory/regional/ec2.py
+aws_inventory/utils/__init__.py
+aws_inventory/utils/boto_helpers.py
+aws_inventory/utils/common.py
+aws_inventory/utils/html_report.py
