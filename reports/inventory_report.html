@@ -1,0 +1,98 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>AWS Inventory Report</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    </head>
+    <body class="p-4">
+      <h1>Genaro Inventory Report</h1>
+
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab1" 
+                  data-bs-toggle="tab" data-bs-target="#content1" type="button">
+            EC2 - us-east-1
+          </button>
+        </li>
+        
+        <li class="nav-item" role="presentation">
+          <button class="nav-link " id="tab2" 
+                  data-bs-toggle="tab" data-bs-target="#content2" type="button">
+            EC2 - us-east-2
+          </button>
+        </li>
+        
+      </ul>
+
+      <div class="tab-content mt-3">
+        
+        <div class="tab-pane fade show active" id="content1">
+          <div class='accordion' id='vpcAccordion'>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+              VPC vpc-0fd676935659607be (172.31.0.0/16)
+            </button>
+          </h2>
+          <div id="collapse1" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <p><b>Internet Gateways:</b> igw-09c40a5a471455b5e</p>
+              <h5>Subnets</h5><ul>
+        <li>subnet-009ab216085716720 (172.31.0.0/20, us-east-1b) - Respaldos Odoo<ul><li>EC2 i-021f406573626d53e - Respaldos Odoo - t3a.medium [stopped]<br>Private IP: 172.31.13.168 | Public IP: None<br>SGs: sg-013cc9f59871b2a54</li></ul></li><li>subnet-0f74c6481f22a2411 (172.31.16.0/20, us-east-1d) - Operaciones, Bachilleres, QA Odoo Acces<ul><li>EC2 i-09e5f0021836fcd8b - Operations - t2.medium [stopped]<br>Private IP: 172.31.31.45 | Public IP: 52.70.27.133<br>SGs: sg-013cc9f59871b2a54</li><li>EC2 i-0a0bdbeb630692037 - PBX - t2.xlarge [running]<br>Private IP: 172.31.25.150 | Public IP: 54.242.126.214<br>SGs: sg-0376df5159ebdbf87</li><li>EC2 i-03f45f514430abf65 - CajaHipodromo - t3.medium [stopped]<br>Private IP: 172.31.17.146 | Public IP: None<br>SGs: sg-0cc07968e6aa96a67</li></ul></li><li>subnet-02a42a4c8c20a1bee (172.31.80.0/20, us-east-1c) - Veeam<ul><li>EC2 i-0840e9ba0967d8f4d - VCG v6 Chihuahua - t3a.micro [running]<br>Private IP: 172.31.86.188 | Public IP: 34.197.22.155<br>SGs: sg-059a3c2f174cb40bd</li><li>EC2 i-0fc3c7653fa38ec7b - Repo CUU T2  Medium 1TB - t3.medium [running]<br>Private IP: 172.31.95.140 | Public IP: 18.233.166.129<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-04fb3477014356c7a - Repo Veeam XML  - t3a.medium [running]<br>Private IP: 172.31.95.82 | Public IP: 52.90.36.186<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-0cb74235d93415426 - VCG2 v6   - t2.micro [running]<br>Private IP: 172.31.88.101 | Public IP: 3.88.222.86<br>SGs: sg-059a3c2f174cb40bd</li><li>EC2 i-01b0dae7e0ced1b42 - VCG2 v6  tijuana - t2.micro [running]<br>Private IP: 172.31.88.60 | Public IP: 107.22.132.106<br>SGs: sg-059a3c2f174cb40bd</li><li>EC2 i-02acc7eb3e566a4e4 - Repo XML 1TB  - t3a.medium [running]<br>Private IP: 172.31.91.233 | Public IP: 54.165.237.107<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-05837d73cf22279f0 - VSPC - t2.large [running]<br>Private IP: 172.31.87.116 | Public IP: 3.91.203.168<br>SGs: sg-04b68f31da09cf38e</li><li>EC2 i-0a7cacc0ca9971dfa -  Repo Tij 1TB - t3a.medium [running]<br>Private IP: 172.31.93.45 | Public IP: 3.82.106.132<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-0c4e7c800639f1602 - Repo 500GB T2 Medium - t2.medium [running]<br>Private IP: 172.31.90.249 | Public IP: 54.163.98.60<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-082abb9141f82df93 - Veeam Backup & Restore - m5.xlarge [running]<br>Private IP: 172.31.81.10 | Public IP: 3.88.232.220<br>SGs: sg-04b68f31da09cf38e</li><li>EC2 i-06652e1f1768422b2 - ERP ODOO - t3.medium [running]<br>Private IP: 172.31.93.96 | Public IP: 44.198.74.144<br>SGs: sg-09ea4ec5936a1c2cc</li><li>EC2 i-0835b6903bd28c20c - Repo Inova - t3.medium [running]<br>Private IP: 172.31.92.27 | Public IP: 54.208.240.171<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-0acfa6f7bd725efc7 - Repo Avance - t3.medium [running]<br>Private IP: 172.31.81.194 | Public IP: 54.234.151.14<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-01695d72af6126f38 - Repo ESJ - t3.medium [running]<br>Private IP: 172.31.82.46 | Public IP: 44.211.217.121<br>SGs: sg-0b424317cce8a5910</li><li>EC2 i-00878e0fcca1e4a11 - Repo Pitic - t3.medium [running]<br>Private IP: 172.31.82.37 | Public IP: 54.196.218.78<br>SGs: sg-0b424317cce8a5910</li></ul></li><li>subnet-0f45852171c40c1c9 (172.31.240.0/20, us-east-1b) - PruebaFiscalia<br><i>No instances</i></li></ul></div></div></div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+              VPC vpc-06704b470535ef199 (10.0.1.0/24) - vpc-multi
+            </button>
+          </h2>
+          <div id="collapse2" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <p><b>Internet Gateways:</b> None</p>
+              <h5>Subnets</h5><ul>
+        <li>subnet-04b8210a92df1ebc9 (10.0.1.0/28, us-east-1c)<br><i>No instances</i></li></ul></div></div></div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+              VPC vpc-0f6fba7db2bf94d39 (10.0.0.0/16) - watchguard
+            </button>
+          </h2>
+          <div id="collapse3" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <p><b>Internet Gateways:</b> igw-057cde1d723d2181d - watchguardIGW</p>
+              <h5>Subnets</h5><ul>
+        <li>subnet-0e9890fa2827a779b (10.0.0.0/24, us-east-1f) - testing1<br><i>No instances</i></li></ul></div></div></div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+              VPC vpc-0eda4a373146aea40 (172.31.0.0/16) - veeam-auto-550c0a4b-6d53-4fcf-adf0-6c7d6ac082d8
+            </button>
+          </h2>
+          <div id="collapse4" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <p><b>Internet Gateways:</b> igw-0b46dab56969abb7b</p>
+              <h5>Subnets</h5><ul>
+        <li>subnet-0d2752ec0f1880a68 (172.31.0.0/16, us-east-1a) - veeam-auto-2d3672e0-67a6-487a-937e-417dceeb01e7<br><i>No instances</i></li></ul></div></div></div></div>
+        </div>
+        
+        <div class="tab-pane fade " id="content2">
+          <div class='accordion' id='vpcAccordion'>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+              VPC vpc-06e53a5e54795d70f (172.31.0.0/16)
+            </button>
+          </h2>
+          <div id="collapse1" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <p><b>Internet Gateways:</b> igw-04b2b7ad85ebb6d68</p>
+              <h5>Subnets</h5><ul>
+        <li>subnet-06931b1596009fafe (172.31.0.0/19, us-east-2c) - test<br><i>No instances</i></li></ul></div></div></div></div>
+        </div>
+        
+      </div>
+    </body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </html>
+    
