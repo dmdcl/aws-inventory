@@ -78,10 +78,25 @@ python -m aws_inventory.main --profile profile_name --regions us-east-1,us-east-
 ```bash
 python -m aws_inventory.main --profile profile_name --regions all
 ```
-### View the report
+### 3. View the report
 The HTML report is saved in the `reports/` folder:
 ```bash
 reports/inventory_report.html
 ```
+### 4. View report in browser via local HTTP server
+#### 1. Navigate to the reports folder:
+```bash
+cd reports
+```
+#### 2. Start a simple HTTP server:
+```bash
+python -m http.server # Linux/Mac
+py- m http.server # Windows
+```
+#### 3. Open a browser and go to: 
+```bash
+http://ipaddress:8000/inventory_report.html
+```
+> You can use `ipconfig` on Windows or `ip a` on Linux to know your ip address
 
 `Made by Dirgo`
