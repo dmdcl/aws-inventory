@@ -1,4 +1,3 @@
-
 import argparse
 from aws_inventory.regional.ec2 import collect_ec2
 from aws_inventory.utils.html_report import render_html, save_output
@@ -25,29 +24,32 @@ def main():
     session = create_session(args.profile)
     regions = parse_regions(args.regions, session)
 
-    # Collect inventories with structured data
+    # Collect inventories grouped by service type
     inventories_by_service = {}
 
+    # Collect EC2 data for all regions
+    ec2_regions_data = {}
     for region in regions:
-        # collect_ec2 now returns structured data, not HTML
         ec2_data = collect_ec2(args.profile, region)
-        
-        # Store with metadata for rendering
-        inventories_by_service[f"EC2 - {region}"] = {
+        ec2_regions_data[region] = ec2_data
+
+    # Group by service
+    if ec2_regions_data:
+        inventories_by_service["EC2"] = {
             "type": "ec2",
-            "region": region,
-            "data": ec2_data
+            "regions": ec2_regions_data
         }
 
     # Example for future global services:
     # iam_data = collect_iam(args.profile)
-    # inventories_by_service["IAM (Global)"] = {
+    # inventories_by_service["IAM"] = {
     #     "type": "iam",
+    #     "global": True,
     #     "data": iam_data
     # }
 
     # Render HTML from structured data
-    html_content = render_html(inventories_by_service)
+    html_content = render_html(inventories_by_service, args.profile)
     filename = "inventory_report.html"
     save_output(html_content, filename)
 

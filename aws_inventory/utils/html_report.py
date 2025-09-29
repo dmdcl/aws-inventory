@@ -129,51 +129,95 @@ def get_ec2_template():
     """
 
 
-def render_service_inventory(service_type, data, region=None):
+def render_service_inventory(service_type, regions_data):
     """
-    Render inventory data based on service type.
+    Render inventory data based on service type with nested regions.
     
     Args:
         service_type: Type of service (e.g., 'ec2', 'iam')
-        data: Structured data to render
-        region: Optional region identifier for unique IDs
+        regions_data: Dict of {region: data} for regional services
     
     Returns:
-        Rendered HTML string
+        Rendered HTML string with nested region tabs
     """
     if service_type.lower() == "ec2":
-        template = Template(get_ec2_template())
-        # Make region safe for HTML IDs (replace hyphens)
-        region_safe = region.replace("-", "") if region else "global"
-        return template.render(vpcs=data, region_safe=region_safe)
+        ec2_template = Template(get_ec2_template())
+        
+        # Create nested region tabs
+        nested_html = """
+        <ul class="nav nav-pills mb-3" id="regionTabs" role="tablist">
+        """
+        
+        # Generate region tabs
+        for idx, region in enumerate(regions_data.keys(), 1):
+            active_class = "active" if idx == 1 else ""
+            nested_html += f"""
+            <li class="nav-item" role="presentation">
+              <button class="nav-link {active_class}" id="region-tab-{idx}" 
+                      data-bs-toggle="pill" data-bs-target="#region-{idx}" 
+                      type="button" role="tab">
+                {region}
+              </button>
+            </li>
+            """
+        
+        nested_html += "</ul><div class='tab-content' id='regionTabContent'>"
+        
+        # Generate region content
+        for idx, (region, data) in enumerate(regions_data.items(), 1):
+            active_class = "show active" if idx == 1 else ""
+            region_safe = region.replace("-", "")
+            rendered_region = ec2_template.render(vpcs=data, region_safe=region_safe)
+            
+            nested_html += f"""
+            <div class="tab-pane fade {active_class}" id="region-{idx}" role="tabpanel">
+              {rendered_region}
+            </div>
+            """
+        
+        nested_html += "</div>"
+        return nested_html
     
     # Placeholder for other services
     return f"<div class='alert alert-warning'>Rendering for {service_type} not implemented yet.</div>"
 
 
-def render_html(inventories_by_service):
+def render_html(inventories_by_service, profile_name=None):
     """
     Render the complete HTML report with all service inventories.
     
     Args:
         inventories_by_service: dict like
         {
-            "EC2 - us-east-1": {"type": "ec2", "region": "us-east-1", "data": [...]},
-            "IAM (Global)": {"type": "iam", "data": [...]}
+            "EC2": {
+                "type": "ec2",
+                "regions": {
+                    "us-east-1": [...],
+                    "us-west-2": [...]
+                }
+            },
+            "IAM": {"type": "iam", "global": True, "data": [...]}
         }
+        profile_name: AWS profile name used
     """
     # Generate timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Render each service's inventory
     rendered_inventories = {}
-    for service_key, inventory_info in inventories_by_service.items():
+    for service_name, inventory_info in inventories_by_service.items():
         service_type = inventory_info.get("type", "unknown")
-        data = inventory_info.get("data", [])
-        region = inventory_info.get("region")
         
-        rendered_html = render_service_inventory(service_type, data, region)
-        rendered_inventories[service_key] = rendered_html
+        if "regions" in inventory_info:
+            # Regional service (like EC2)
+            regions_data = inventory_info["regions"]
+            rendered_html = render_service_inventory(service_type, regions_data)
+        else:
+            # Global service (like IAM)
+            data = inventory_info.get("data", [])
+            rendered_html = f"<div class='alert alert-info'>Global service rendering coming soon</div>"
+        
+        rendered_inventories[service_name] = rendered_html
     
     html_template = """
     <!DOCTYPE html>
@@ -183,6 +227,7 @@ def render_html(inventories_by_service):
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>AWS Inventory Report</title>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
       <style>
         body {
           background-color: #f8f9fa;
@@ -203,6 +248,12 @@ def render_html(inventories_by_service):
           color: #667eea;
           font-weight: 600;
         }
+        .nav-pills .nav-link {
+          color: #495057;
+        }
+        .nav-pills .nav-link.active {
+          background-color: #667eea;
+        }
         .accordion-button:not(.collapsed) {
           background-color: #e7f1ff;
           color: #0c63e4;
@@ -217,12 +268,56 @@ def render_html(inventories_by_service):
           font-size: 0.875rem;
           opacity: 0.9;
         }
+        .export-buttons {
+          position: absolute;
+          top: 2rem;
+          right: 2rem;
+        }
+        .export-btn {
+          background-color: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 0.25rem;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .export-btn:hover {
+          background-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-2px);
+        }
+        @media print {
+          .export-buttons, .nav-tabs, .nav-pills {
+            display: none;
+          }
+          .tab-pane {
+            display: block !important;
+            opacity: 1 !important;
+          }
+          .accordion-collapse {
+            display: block !important;
+          }
+          .accordion-button {
+            display: none;
+          }
+        }
       </style>
     </head>
     <body class="p-4">
       
-      <div class="header-section">
+      <div class="header-section position-relative">
+        <div class="export-buttons">
+          <button class="export-btn me-2" onclick="exportToPDF()">
+            <i class="bi bi-file-pdf"></i> Export PDF
+          </button>
+          <button class="export-btn" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print
+          </button>
+        </div>
         <h1 class="mb-2">AWS Inventory Report</h1>
+        {% if profile_name %}
+        <p class="mb-1"><strong>Profile:</strong> {{ profile_name }}</p>
+        {% endif %}
         <p class="timestamp mb-0">Generated on: {{ timestamp }}</p>
       </div>
 
@@ -257,11 +352,49 @@ def render_html(inventories_by_service):
 
     </body>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+      function exportToPDF() {
+        const element = document.body;
+        const opt = {
+          margin: 10,
+          filename: 'aws-inventory-report-' + new Date().toISOString().split('T')[0] + '.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        
+        // Show all content before export
+        const allTabPanes = document.querySelectorAll('.tab-pane');
+        const allAccordions = document.querySelectorAll('.accordion-collapse');
+        
+        allTabPanes.forEach(pane => {
+          pane.classList.add('show', 'active');
+        });
+        
+        allAccordions.forEach(accordion => {
+          accordion.classList.add('show');
+        });
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+          // Restore original state
+          allTabPanes.forEach((pane, idx) => {
+            if (idx !== 0) {
+              pane.classList.remove('show', 'active');
+            }
+          });
+          allAccordions.forEach(accordion => {
+            accordion.classList.remove('show');
+          });
+        });
+      }
+    </script>
     </html>
     """
     
     template = Template(html_template)
     return template.render(
         rendered_inventories=rendered_inventories,
-        timestamp=timestamp
+        timestamp=timestamp,
+        profile_name=profile_name
     )
