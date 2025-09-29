@@ -34,7 +34,7 @@ git clone <repo-url>
 cd aws-inventory
 pip install -e.
 ```
-> This installs the package in editable mode, so any changes to the source code are imediatly available.
+> This installs the package in editable mode, so any changes to the source code are inmediatly available.
 #### Option B: Regular pip install
 ```bash
 git clone <repo-url>
@@ -68,15 +68,15 @@ aws configure --profile profile_name
 From the project root run:
 **Single region:**
 ```bash
-python -m aws_inventory.main --profile profile_name --regions us-east-1
+python3 -m aws_inventory.main --profile profile_name --regions us-east-1
 ```
 **Multiple regions:**
 ```bash
-python -m aws_inventory.main --profile profile_name --regions us-east-1,us-east-2
+python3 -m aws_inventory.main --profile profile_name --regions us-east-1,us-east-2
 ```
 **All regions:**
 ```bash
-python -m aws_inventory.main --profile profile_name --regions all
+python3 -m aws_inventory.main --profile profile_name --regions all
 ```
 ### 3. View the report
 The HTML report is saved in the `reports/` folder:
@@ -90,8 +90,8 @@ cd reports
 ```
 #### 2. Start a simple HTTP server:
 ```bash
-python -m http.server # Linux/Mac
-py- m http.server # Windows
+python3 -m http.server # Linux/Mac
+py -m http.server # Windows
 ```
 #### 3. Open a browser and go to: 
 ```bash
