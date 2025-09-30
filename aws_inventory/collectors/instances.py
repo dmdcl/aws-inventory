@@ -1,5 +1,5 @@
 #EC2 Instances collector module
-from aws_inventory.utils import get_name
+from aws_inventory.utils.common import get_name
 def collect_instances(ec2_client, sg_map):
     """
     Collect EC2 instances grouped by subnet
@@ -12,10 +12,10 @@ def collect_instances(ec2_client, sg_map):
     """
     reservations = ec2_client.describe_instances()["Reservations"]
     instances_by_subnet = {}
-
+    
     for reservation in reservations:
         for instance in reservation["Instances"]:
-            subnet_id = instance.get("SubnetId"),
+            subnet_id = instance.get("SubnetId")
             if not subnet_id:
                 continue
             
@@ -28,7 +28,7 @@ def collect_instances(ec2_client, sg_map):
                 sg_id = sg["GroupId"]
                 if sg_id in sg_map:
                     instance_sgs.append(sg_map[sg_id])
-
+            
             instances_by_subnet[subnet_id].append({
                 "id": instance["InstanceId"],
                 "name": get_name(instance.get("Tags")),
@@ -38,5 +38,5 @@ def collect_instances(ec2_client, sg_map):
                 "public_ip": instance.get("PublicIpAddress"),
                 "security_groups": instance_sgs,
             })
-        
-        return instances_by_subnet
+    
+    return instances_by_subnet

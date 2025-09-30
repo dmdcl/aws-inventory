@@ -46,7 +46,7 @@ def collect_security_groups(ec2_client):
 
     Returns: dict: Map of security group ID to security groups details
     """
-    sgs = ec2_client.describe_security_groups().get["SecurityGroups"]
+    sgs = ec2_client.describe_security_groups()["SecurityGroups"]
     sg_map = {}
 
     for sg in sgs:
