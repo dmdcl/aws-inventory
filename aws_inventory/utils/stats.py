@@ -1,5 +1,4 @@
-"""Statistics calculation utilities."""
-
+#Statistics calculation utilities."""
 
 def calculate_ec2_stats(regions_data):
     """
@@ -62,7 +61,7 @@ def calculate_vpc_stats(vpc):
 
 def calculate_region_stats(vpcs):
     """
-    Calculate statistics for a single region.
+    Calculate statistics for a single region (EC2).
     
     Args:
         vpcs: List of VPC dictionaries
@@ -80,4 +79,58 @@ def calculate_region_stats(vpcs):
     return {
         "vpc_count": vpc_count,
         "instance_count": instance_count
+    }
+
+
+def calculate_eks_stats(regions_data):
+    """
+    Calculate statistics for EKS resources across all regions.
+    
+    Args:
+        regions_data: Dictionary of {region: [clusters]} data
+        
+    Returns:
+        dict: Statistics including totals and breakdowns
+    """
+    stats = {
+        "total_clusters": 0,
+        "total_node_groups": 0,
+        "total_nodes": 0,
+        "total_fargate_profiles": 0,
+        "clusters_by_status": {},
+        "regions_with_resources": 0
+    }
+    
+    for region, clusters in regions_data.items():
+        if clusters:
+            stats["regions_with_resources"] += 1
+            
+        for cluster in clusters:
+            stats["total_clusters"] += 1
+            stats["total_node_groups"] += len(cluster.get("node_groups", []))
+            stats["total_nodes"] += cluster.get("total_nodes", 0)
+            stats["total_fargate_profiles"] += len(cluster.get("fargate_profiles", []))
+            
+            status = cluster.get("status", "unknown")
+            stats["clusters_by_status"][status] = stats["clusters_by_status"].get(status, 0) + 1
+    
+    return stats
+
+
+def calculate_region_stats_eks(clusters):
+    """
+    Calculate statistics for a single region (EKS).
+    
+    Args:
+        clusters: List of EKS cluster dictionaries
+        
+    Returns:
+        dict: Region-level statistics
+    """
+    cluster_count = len(clusters)
+    total_nodes = sum(cluster.get("total_nodes", 0) for cluster in clusters)
+    
+    return {
+        "cluster_count": cluster_count,
+        "total_nodes": total_nodes
     }
