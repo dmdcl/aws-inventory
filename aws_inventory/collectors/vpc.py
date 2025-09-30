@@ -1,3 +1,5 @@
+# VPC and Subnet collector module.
+from aws_inventory.utils.common import get_name
 def collect_internet_gateways(ec2_client):
     # Collect internet gateways grouped by VPC
     igws = ec2_client.describe_internet_gateways()["InternetGateways"]
@@ -17,7 +19,7 @@ def collect_internet_gateways(ec2_client):
 
         return igws_by_vpc
     
-    def collect_subnets(ec2_client):
+    def collect_subnets(ec2_client, instances_by_subnet):
         """ 
         Collect subnets grouped by VPC
 
