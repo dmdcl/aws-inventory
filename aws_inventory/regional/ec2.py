@@ -2,7 +2,7 @@
 from aws_inventory.utils.boto_helpers import create_session
 from aws_inventory.collectors.security_groups import collect_security_groups
 from aws_inventory.collectors.instances import collect_instances
-from aws_inventory.collectors.vpc import (
+from aws_inventory.collectors.vpcs import (
     collect_internet_gateways,
     collect_subnets,
     collect_vpcs
@@ -27,7 +27,7 @@ def collect_ec2(profile, region):
         list: List of VPC dictionaries with all nested resources
     """
     session = create_session(profile)
-    ec2 = session.client("ec2, region_name=region")
+    ec2 = session.client("ec2", region_name=region)
 
     # Collect resources in dependency order
     sg_map = collect_security_groups(ec2)
