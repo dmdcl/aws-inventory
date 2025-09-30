@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from jinja2 import Template
 from aws_inventory.renderers.ec2_renderer import render_ec2_inventory
+from aws_inventory.renderers.eks_renderer import render_eks_inventory
 from aws_inventory.renderers import templates
 
 
@@ -73,6 +74,8 @@ def render_service_content(inventories_by_service):
             regions_data = inventory_info["regions"]
             if service_type.lower() == "ec2":
                 rendered_html = render_ec2_inventory(regions_data)
+            elif service_type.lower() == "eks":
+                rendered_html = render_eks_inventory(regions_data)
             else:
                 rendered_html = f'<div class="alert alert-warning">Rendering for {service_type} not implemented yet.</div>'
         else:
@@ -109,6 +112,13 @@ def render_html(inventories_by_service, profile_name=None):
         {
             "EC2": {
                 "type": "ec2",
+                "regions": {
+                    "us-east-1": [...],
+                    "us-west-2": [...]
+                }
+            },
+            "EKS": {
+                "type": "eks",
                 "regions": {
                     "us-east-1": [...],
                     "us-west-2": [...]
