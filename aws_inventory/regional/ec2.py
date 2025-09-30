@@ -1,9 +1,12 @@
 from aws_inventory.utils.boto_helpers import create_session
-from aws_inventory.utils.html_report import save_output
 from aws_inventory.utils.common import get_name
 
 
 def collect_ec2(profile, region):
+    """
+    Collect EC2 inventory for a given region.
+    Returns structured data (dict/list) instead of HTML.
+    """
     session = create_session(profile)
     ec2 = session.client("ec2", region_name=region)
 
@@ -22,7 +25,10 @@ def collect_ec2(profile, region):
             "cidr": vpc.get("CidrBlock"),
             "subnets": [],
             "igws": [
-                {"id": igw["InternetGatewayId"], "name": get_name(igw.get("Tags"))}
+                {
+                    "id": igw["InternetGatewayId"], 
+                    "name": get_name(igw.get("Tags"))
+                }
                 for igw in igws
                 if any(att["VpcId"] == vpc_id for att in igw["Attachments"])
             ],
@@ -56,31 +62,4 @@ def collect_ec2(profile, region):
 
         inventory.append(vpc_entry)
 
-    # Render EC2 tab HTML
-    html = "<div class='accordion' id='vpcAccordion'>"
-    for idx, vpc in enumerate(inventory, 1):
-        html += f"""
-        <div class="accordion-item">
-          <h2 class="accordion-header" id="heading{idx}">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{idx}">
-              VPC {vpc['id']} ({vpc['cidr']}){' - '+vpc['name'] if vpc['name'] else ''}
-            </button>
-          </h2>
-          <div id="collapse{idx}" class="accordion-collapse collapse">
-            <div class="accordion-body">
-              <p><b>Internet Gateways:</b> {', '.join([igw['id'] + (' - '+igw['name'] if igw['name'] else '') for igw in vpc['igws']]) or 'None'}</p>
-              <h5>Subnets</h5><ul>
-        """
-        for subnet in vpc["subnets"]:
-            html += f"<li>{subnet['id']} ({subnet['cidr']}, {subnet['az']}){' - '+subnet['name'] if subnet['name'] else ''}"
-            if subnet["instances"]:
-                html += "<ul>"
-                for inst in subnet["instances"]:
-                    html += f"<li>EC2 {inst['id']}{' - '+inst['name'] if inst['name'] else ''} - {inst['type']} [{inst['state']}]<br>Private IP: {inst['private_ip']} | Public IP: {inst['public_ip']}<br>SGs: {', '.join(inst['sgs'])}</li>"
-                html += "</ul>"
-            else:
-                html += "<br><i>No instances</i>"
-            html += "</li>"
-        html += "</ul></div></div></div>"
-    html += "</div>"
-    return html
+    return inventory
