@@ -1,3 +1,5 @@
+#EC2 Instances collector module
+from aws_inventory.utils import get_name
 def collect_instances(ec2_client, sg_map):
     """
     Collect EC2 instances grouped by subnet
