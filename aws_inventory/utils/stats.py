@@ -1,4 +1,5 @@
-#Statistics calculation utilities."""
+"""Statistics calculation utilities."""
+
 
 def calculate_ec2_stats(regions_data):
     """
@@ -97,6 +98,7 @@ def calculate_eks_stats(regions_data):
         "total_node_groups": 0,
         "total_nodes": 0,
         "total_fargate_profiles": 0,
+        "total_service_account_roles": 0,
         "clusters_by_status": {},
         "regions_with_resources": 0
     }
@@ -110,6 +112,7 @@ def calculate_eks_stats(regions_data):
             stats["total_node_groups"] += len(cluster.get("node_groups", []))
             stats["total_nodes"] += cluster.get("total_nodes", 0)
             stats["total_fargate_profiles"] += len(cluster.get("fargate_profiles", []))
+            stats["total_service_account_roles"] += len(cluster.get("service_account_roles", []))
             
             status = cluster.get("status", "unknown")
             stats["clusters_by_status"][status] = stats["clusters_by_status"].get(status, 0) + 1

@@ -111,13 +111,137 @@ def collect_addons(eks_client, cluster_name):
         return []
 
 
-def collect_clusters(eks_client, ec2_client):
+def collect_oidc_provider(cluster_details, iam_client):
+    """
+    Collect OIDC provider information for the cluster.
+    
+    Args:
+        cluster_details: Cluster details from describe_cluster
+        iam_client: Boto3 IAM client
+        
+    Returns:
+        dict: OIDC provider information
+    """
+    try:
+        oidc_issuer = cluster_details.get("identity", {}).get("oidc", {}).get("issuer")
+        
+        if not oidc_issuer:
+            return None
+        
+        # Extract the OIDC provider ID from the issuer URL
+        # Format: https://oidc.eks.region.amazonaws.com/id/EXAMPLED539D4633E53DE1B71EXAMPLE
+        oidc_id = oidc_issuer.split("/")[-1] if "/" in oidc_issuer else None
+        
+        # Try to find the provider in IAM
+        oidc_provider_arn = None
+        try:
+            providers = iam_client.list_open_id_connect_providers().get("OpenIDConnectProviderList", [])
+            for provider in providers:
+                if oidc_id and oidc_id in provider["Arn"]:
+                    oidc_provider_arn = provider["Arn"]
+                    break
+        except Exception:
+            pass
+        
+        return {
+            "issuer": oidc_issuer,
+            "id": oidc_id,
+            "arn": oidc_provider_arn,
+            "exists": oidc_provider_arn is not None
+        }
+    except Exception as e:
+        print(f"Error collecting OIDC provider: {e}")
+        return None
+
+
+def collect_service_account_roles(cluster_name, cluster_oidc, iam_client):
+    """
+    Collect IAM roles configured for service accounts (IRSA).
+    
+    Args:
+        cluster_name: Name of the EKS cluster
+        cluster_oidc: OIDC provider information
+        iam_client: Boto3 IAM client
+        
+    Returns:
+        list: List of IAM roles configured for service accounts
+    """
+    try:
+        if not cluster_oidc or not cluster_oidc.get("id"):
+            return []
+        
+        oidc_id = cluster_oidc["id"]
+        service_account_roles = []
+        
+        # List all roles and filter those with trust relationships to this cluster's OIDC
+        paginator = iam_client.get_paginator('list_roles')
+        
+        for page in paginator.paginate():
+            for role in page.get("Roles", []):
+                role_name = role["RoleName"]
+                
+                # Get the trust policy
+                try:
+                    assume_role_doc = role.get("AssumeRolePolicyDocument", {})
+                    
+                    # Check if this role trusts our OIDC provider
+                    for statement in assume_role_doc.get("Statement", []):
+                        principal = statement.get("Principal", {})
+                        federated = principal.get("Federated", "")
+                        
+                        if oidc_id in federated:
+                            # Extract service account from condition
+                            condition = statement.get("Condition", {})
+                            string_equals = condition.get("StringEquals", {})
+                            
+                            # Try different possible condition keys
+                            sa_key = f"{cluster_oidc['issuer'].replace('https://', '')}:sub"
+                            service_account = string_equals.get(sa_key, "")
+                            
+                            if not service_account:
+                                # Try alternative format
+                                for key, value in string_equals.items():
+                                    if ":sub" in key and oidc_id in key:
+                                        service_account = value
+                                        break
+                            
+                            # Extract namespace and SA name from "system:serviceaccount:namespace:sa-name"
+                            namespace = ""
+                            sa_name = ""
+                            if service_account and "system:serviceaccount:" in service_account:
+                                parts = service_account.replace("system:serviceaccount:", "").split(":")
+                                if len(parts) >= 2:
+                                    namespace = parts[0]
+                                    sa_name = parts[1]
+                            
+                            service_account_roles.append({
+                                "role_name": role_name,
+                                "role_arn": role["Arn"],
+                                "namespace": namespace,
+                                "service_account": sa_name,
+                                "full_service_account": service_account,
+                                "created_date": role.get("CreateDate").isoformat() if role.get("CreateDate") else None,
+                            })
+                            break
+                
+                except Exception as e:
+                    continue
+        
+        return service_account_roles
+    
+    except Exception as e:
+        print(f"Error collecting service account roles for {cluster_name}: {e}")
+        return []
+
+
+def collect_clusters(eks_client, ec2_client, iam_client):
     """
     Collect all EKS clusters with their associated resources.
     
     Args:
         eks_client: Boto3 EKS client
         ec2_client: Boto3 EC2 client
+        iam_client: Boto3 IAM client
         
     Returns:
         list: List of EKS cluster dictionaries with all nested resources
@@ -133,6 +257,10 @@ def collect_clusters(eks_client, ec2_client):
             node_groups = collect_node_groups(eks_client, cluster_name)
             fargate_profiles = collect_fargate_profiles(eks_client, cluster_name)
             addons = collect_addons(eks_client, cluster_name)
+            
+            # Collect OIDC and IAM roles for service accounts
+            oidc_provider = collect_oidc_provider(cluster_details, iam_client)
+            service_account_roles = collect_service_account_roles(cluster_name, oidc_provider, iam_client)
             
             # Calculate total node count
             total_nodes = sum(ng.get("desired_size", 0) for ng in node_groups)
@@ -156,6 +284,8 @@ def collect_clusters(eks_client, ec2_client):
                 "node_groups": node_groups,
                 "fargate_profiles": fargate_profiles,
                 "addons": addons,
+                "oidc_provider": oidc_provider,
+                "service_account_roles": service_account_roles,
                 "total_nodes": total_nodes,
             })
         

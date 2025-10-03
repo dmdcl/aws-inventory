@@ -1,4 +1,4 @@
-#EKS-specific HTML rendering logic."""
+"""EKS-specific HTML rendering logic."""
 from jinja2 import Template
 from aws_inventory.utils.stats import calculate_eks_stats, calculate_region_stats_eks
 
@@ -101,6 +101,90 @@ def render_addons(cluster):
     return html
 
 
+def render_oidc_provider(cluster):
+    """Render OIDC provider information."""
+    oidc = cluster.get("oidc_provider")
+    
+    if not oidc:
+        return '<p class="text-muted"><em>No OIDC provider configured</em></p>'
+    
+    status_badge = '<span class="badge bg-success">Configured</span>' if oidc.get("exists") else '<span class="badge bg-warning">Not Found in IAM</span>'
+    
+    html = f"""
+    <h6 class="mt-3">OIDC Identity Provider:</h6>
+    <div class="card mb-3">
+      <div class="card-body">
+        <p class="mb-2"><strong>Status:</strong> {status_badge}</p>
+        <p class="mb-2"><strong>Issuer:</strong> <code>{oidc.get('issuer', '')}</code></p>
+        <p class="mb-2"><strong>Provider ID:</strong> <code>{oidc.get('id', '')}</code></p>
+    """
+    
+    if oidc.get("arn"):
+        html += f'<p class="mb-0"><strong>ARN:</strong> <code>{oidc.get("arn")}</code></p>'
+    
+    html += """
+      </div>
+    </div>
+    """
+    
+    return html
+
+
+def render_service_account_roles(cluster):
+    """Render IAM roles for service accounts (IRSA)."""
+    sa_roles = cluster.get("service_account_roles", [])
+    
+    if not sa_roles:
+        return '<p class="text-muted"><em>No IAM roles configured for service accounts</em></p>'
+    
+    html = f"""
+    <h6 class="mt-3">IAM Roles for Service Accounts (IRSA):</h6>
+    <div class="alert alert-info mb-2">
+      <small><i class="bi bi-info-circle"></i> <strong>{len(sa_roles)}</strong> IAM role(s) configured with trust relationships to this cluster's OIDC provider</small>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover">
+        <thead>
+          <tr>
+            <th>IAM Role</th>
+            <th>Namespace</th>
+            <th>Service Account</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+    """
+    
+    for sa_role in sa_roles:
+        namespace = sa_role.get('namespace', '') or '-'
+        sa_name = sa_role.get('service_account', '') or '-'
+        created = sa_role.get('created_date', 'N/A')
+        
+        # Truncate created date to just the date part
+        if created and created != 'N/A':
+            created = created.split('T')[0]
+        
+        html += f"""
+        <tr>
+          <td>
+            <strong>{sa_role.get('role_name', '')}</strong><br>
+            <small class="text-muted"><code>{sa_role.get('role_arn', '')}</code></small>
+          </td>
+          <td><span class="badge bg-primary">{namespace}</span></td>
+          <td><code>{sa_name}</code></td>
+          <td><small>{created}</small></td>
+        </tr>
+        """
+    
+    html += """
+        </tbody>
+      </table>
+    </div>
+    """
+    
+    return html
+
+
 def render_cluster_body(cluster, region_safe, cluster_index):
     """Render the complete body of a cluster accordion."""
     # Cluster details
@@ -132,8 +216,10 @@ def render_cluster_body(cluster, region_safe, cluster_index):
     node_groups_html = render_node_groups(cluster)
     fargate_html = render_fargate_profiles(cluster)
     addons_html = render_addons(cluster)
+    oidc_html = render_oidc_provider(cluster)
+    sa_roles_html = render_service_account_roles(cluster)
     
-    return details_html + node_groups_html + fargate_html + addons_html
+    return details_html + oidc_html + sa_roles_html + node_groups_html + fargate_html + addons_html
 
 
 def render_region_tabs_eks(regions_data):
@@ -181,6 +267,9 @@ def render_region_content_eks(regions_data):
                 status = cluster.get("status", "unknown")
                 status_badge = f'<span class="badge bg-success ms-2">{status}</span>' if status == "ACTIVE" else f'<span class="badge bg-warning ms-2">{status}</span>'
                 
+                # Count service account roles
+                sa_role_count = len(cluster.get("service_account_roles", []))
+                
                 html += f"""
                 <div class="accordion-item">
                   <h2 class="accordion-header" id="heading{region_safe}{cluster_index}">
@@ -203,6 +292,9 @@ def render_region_content_eks(regions_data):
                         </span>
                         <span class="badge bg-success ms-1" title="Addons">
                           <i class="bi bi-puzzle"></i> {addon_count} addon(s)
+                        </span>
+                        <span class="badge bg-warning text-dark ms-1" title="IAM Roles for Service Accounts">
+                          <i class="bi bi-key"></i> {sa_role_count} IRSA
                         </span>
                       </span>
                     </button>
@@ -229,7 +321,7 @@ def render_eks_stats(stats):
     """Render EKS statistics dashboard."""
     html = """
     <div class="row mb-4">
-      <div class="col-md-3">
+      <div class="col-md-2">
         <div class="card text-center">
           <div class="card-body">
             <h5 class="card-title text-primary">{}</h5>
@@ -237,7 +329,7 @@ def render_eks_stats(stats):
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <div class="card text-center">
           <div class="card-body">
             <h5 class="card-title text-info">{}</h5>
@@ -245,7 +337,7 @@ def render_eks_stats(stats):
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <div class="card text-center">
           <div class="card-body">
             <h5 class="card-title text-success">{}</h5>
@@ -253,11 +345,27 @@ def render_eks_stats(stats):
           </div>
         </div>
       </div>
-      <div class="col-md-3">
+      <div class="col-md-2">
         <div class="card text-center">
           <div class="card-body">
             <h5 class="card-title text-warning">{}</h5>
             <p class="card-text small">Fargate Profiles</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title text-secondary">{}</h5>
+            <p class="card-text small">IRSA Roles</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <div class="card text-center">
+          <div class="card-body">
+            <h5 class="card-title text-dark">{}</h5>
+            <p class="card-text small">Regions</p>
           </div>
         </div>
       </div>
@@ -266,7 +374,9 @@ def render_eks_stats(stats):
         stats['total_clusters'],
         stats['total_node_groups'],
         stats['total_nodes'],
-        stats['total_fargate_profiles']
+        stats['total_fargate_profiles'],
+        stats['total_service_account_roles'],
+        stats['regions_with_resources']
     )
     
     return html
